@@ -4,7 +4,7 @@
 This write-up describes some elements of the general functioning of the [rl_games](https://github.com/Denys88/rl_games/) reinforcement learning library. It also provides a guide on extending rl_games with new environments and algorithms using a structure similar to the [IsaacGymEnvs](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) package. Topics covered in this write-up are
 1. The various components of rl_games (runner, algorthms, environments ...)
 2. Using rl_games for your own work
-    - Adding new gym-like environments to rl_games 
+    - Adding new gym-like environments to rl_games
     - Using non-gym environments and simulators with the algorithms in rl_games (refer to [IsaacGymEnvs](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs) for examples)
     - Adding new algorithms to rl_games
 
@@ -18,11 +18,11 @@ python runner.py --play --file rl_games/configs/atari/ppo_pong.yaml --checkpoint
 
 rl_games uses the following base classes to define algorithms, instantiate environments, and log metrics.
 
-1. **Main Script** - `rl_games.torch_runner.Runner` 
-    - This is the main class that instantiates the algorithm as per the given configuration and executes either training or playing 
-    - When instantiated, algorithm instances for all algos in rl_games are automatically added using `rl_games.common.Objectfactory()`'s `register_builder()` method. The same is also done for the player instances for all algos. 
-    - Depending on the args given, either `self.run_train()` or `self.run_play()` is executed 
-    - The Runner also sets up the algorithm observer that logs training metrics. If one is not provided, it automatically uses the `DefaultAlgoObserver()` which logs metrics available to the algo using the tensorboard summarywriter. 
+1. **Main Script** - `rl_games.torch_runner.Runner`
+    - This is the main class that instantiates the algorithm as per the given configuration and executes either training or playing
+    - When instantiated, algorithm instances for all algos in rl_games are automatically added using `rl_games.common.Objectfactory()`'s `register_builder()` method. The same is also done for the player instances for all algos.
+    - Depending on the args given, either `self.run_train()` or `self.run_play()` is executed
+    - The Runner also sets up the algorithm observer that logs training metrics. If one is not provided, it automatically uses the `DefaultAlgoObserver()` which logs metrics available to the algo using the tensorboard summarywriter.
     - Logs and checkpoints are automatically created in a directory called nn (by default).
     - Custom algorithms and observers can also be provided based on your requirements (more on this below).
 
@@ -35,14 +35,15 @@ rl_games uses the following base classes to define algorithms, instantiate envir
     - Also has a `create(self, name, **kwargs)` method that simply returns one of the registered builders by name
 
 3. **RL Algorithms**
-    - rl_games has several reinforcement learning algorithms. Most of these inherit from some sort of base algorithm class, for example, `rl_games.algos_torch.A2CBase`. 
+    - rl_games has several reinforcement learning algorithms. Most of these inherit from some sort of base algorithm class, for example, `rl_games.algos_torch.A2CBase`.
     - In rl_games environments are instantiated by the algorithm. Depending on the config setup, you can also run multiple envs in parallel.
 
 4. **Environments** - `rl_games.common.vecenv` & `rl_games.common.env_configurations`
+
     - The `vecenv` script holds classes to instantiate different environments based on their type. Since rl_games is quite a broad library, it supports multiple environment types (such as openAI gym envs, brax envs, cule envs etc). These environment types and their base classes are stored in the `rl_games.common.vecenv.vecenv_config` dictionary. The environment class enables stuff like running multiple parallel environments, or running multi-agent environments. By default, all available environments are already added. Adding new environments is explained below.
 
     - `rl_games.common.env_configurations.configurations` is another dictionary that stores `env_name: {'vecenv_type', 'env_creator}` information. For example, the following stores the environment name "CartPole-v1" with a value for its type and a lambda function that instantiates the respective gym env.
-        ```python    
+        ```python
         'CartPole-v1' : {
             'vecenv_type' : 'RAY',
             'env_creator' : lambda **kwargs : gym.make('CartPole-v1'),}
@@ -51,7 +52,7 @@ rl_games uses the following base classes to define algorithms, instantiate envir
     - While being a bit convoluted, this allows us to directly pass an env name in the config to run experiments
 
 ## Extending rl_games for your own work
-While rl_games provides a great baseline implementation of several environments and algorithms, it is also a great starting point for your own work. The rest of this write-up explains how new environments or algorithms can be added. It is based on the setup from [IsaacGymEnvs](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs), the NVIDIA repository for RL simulations and training. We use [hydra](https://hydra.cc/docs/intro/) for easier configuration management. Further, instead of directly using `runner.py` we use another similar script called `train.py` which allows us to dynamically add new environments and insert out own algorithms. 
+While rl_games provides a great baseline implementation of several environments and algorithms, it is also a great starting point for your own work. The rest of this write-up explains how new environments or algorithms can be added. It is based on the setup from [IsaacGymEnvs](https://github.com/NVIDIA-Omniverse/IsaacGymEnvs), the NVIDIA repository for RL simulations and training. We use [hydra](https://hydra.cc/docs/intro/) for easier configuration management. Further, instead of directly using `runner.py` we use another similar script called `train.py` which allows us to dynamically add new environments and insert out own algorithms.
 
 With this considered, our final file structure is something like this.
 
@@ -70,7 +71,7 @@ project dir
 │       │   customenv.yaml
 │       │   otherenv.yaml
 │       │   ...
-|   
+|
 │   └─── train dir (configs for training the algorithm)
 │       │   customenvPPO.yaml
 │       │   otherenvAlgo.yaml
@@ -90,6 +91,7 @@ project dir
 ```
 
 ### Adding new gym-like environments
+
 New environments can be used with the rl_games setup by first defining the TYPE of the new env. A new environment TYPE can be added by calling the `vecenv.register(config_name, func)` function that simply adds the `config_name:func` pair to the dictionary. For example the following line adds a 'RAY' type env with a lambda function that then instantiates the RayVecEnv class. The "RayVecEnv" holds "RayWorkers" that internally store the environment. This automatically allows for multi-env training.
 
 ```python
@@ -143,7 +145,7 @@ class CustomRayVecEnv(IVecEnv):
         self.use_torch = False
         self.seed = kwargs.pop('seed', None)
 
-        
+
         self.remote_worker = self.ray.remote(CustomRayWorker)
         self.workers = [self.remote_worker.remote(self.config_dict, self.config_name, kwargs) for i in range(self.num_actors)]
 
@@ -183,11 +185,11 @@ def build_runner(algo_observer):
     return runner
 ```
 
-As you might have noticed from above, you can also add a custom observer to log whatever data you need. You can make your own by inheriting from `rl_games.common.algo_observer.AlgoObserver`. If you wish to log scores, your custom environment must have a "scores" key in the info dictionary (the info dict is returned when the environment is stepped). 
+As you might have noticed from above, you can also add a custom observer to log whatever data you need. You can make your own by inheriting from `rl_games.common.algo_observer.AlgoObserver`. If you wish to log scores, your custom environment must have a "scores" key in the info dictionary (the info dict is returned when the environment is stepped).
 
 
-### A complete example 
-Here's a complete example of a custom `train.py` script that makes a new gym-like env called pushT and uses a custom observer to log metrics. 
+### A complete example
+Here's a complete example of a custom `train.py` script that makes a new gym-like env called pushT and uses a custom observer to log metrics.
 
 ```python
 import hydra
@@ -196,7 +198,7 @@ from omegaconf import DictConfig, OmegaConf
 from omegaconf import DictConfig, OmegaConf
 
 
-# Hydra decorator to pass in the config. Looks for a config file in the specified path. This file in turn has links to other configs 
+# Hydra decorator to pass in the config. Looks for a config file in the specified path. This file in turn has links to other configs
 @hydra.main(version_base="1.1", config_name="custom_config", config_path="./cfg")
 def launch_rlg_hydra(cfg: DictConfig):
 
@@ -227,13 +229,13 @@ def launch_rlg_hydra(cfg: DictConfig):
         env =  PushTEnv()
         return env
 
-    # env_configurations.register adds the env to the list of rl_games envs. 
+    # env_configurations.register adds the env to the list of rl_games envs.
     env_configurations.register('pushT', {
         'vecenv_type': 'CUSTOMRAY',
         'env_creator': lambda **kwargs: create_pusht_env(**kwargs),
     })
 
-    # vecenv register calls the following lambda function which then returns an instance of CUSTOMRAY. 
+    # vecenv register calls the following lambda function which then returns an instance of CUSTOMRAY.
     vecenv.register('CUSTOMRAY', lambda config_name, num_actors, **kwargs: CustomRayVecEnv(env_configurations.configurations, config_name, num_actors, **kwargs))
 
     # Convert to a big dictionary

@@ -14,16 +14,16 @@ In RL Games, the training algorithms are referred to as "agents," while their co
 ```python
 def run_train(self, args):
     """Run the training procedure from the algorithm passed in."""
-    
+
     print('Started to train')
     agent = self.algo_factory.create(self.algo_name, base_name='run', params=self.params)
     _restore(agent, args)
     _override_sigma(agent, args)
     agent.train()
-    
+
 def run_play(self, args):
     """Run the inference procedure from the algorithm passed in."""
-    
+
     print('Started to play')
     player = self.create_player()
     _restore(player, args)
@@ -43,7 +43,7 @@ self.algo_factory.register_builder(
 self.algo_factory.register_builder(
     'a2c_discrete',
     lambda **kwargs: a2c_discrete.DiscreteA2CAgent(**kwargs)
-) 
+)
 self.algo_factory.register_builder(
     'sac',
     lambda **kwargs: sac_agent.SACAgent(**kwargs)
@@ -52,7 +52,7 @@ self.algo_factory.register_builder(
 
 At the base of all RL Games algorithms is the `BaseAlgorithm` class, an abstract class that defines several essential methods, including `train` and `train_epoch`, which are critical for training. The `A2CBase` class inherits from `BaseAlgorithm` and provides many shared functionalities for both continuous and discrete A2C agents. These include methods such as `play_steps` and `play_steps_rnn` for gathering rollout data, and `env_step` and `env_reset` for interacting with the environment. However, functions directly related to training—like `train`, `train_epoch`, `update_epoch`, `prepare_dataset`, `train_actor_critic`, and `calc_gradients`—are left unimplemented at this level. These functions are implemented in `ContinuousA2CBase`, a subclass of `A2CBase`, and further in `A2CAgent`, a subclass of `ContinuousA2CBase`.
 
-The `ContinuousA2CBase` class is responsible for the core logic of agent training, specifically in the methods `train`, `train_epoch`, and `prepare_dataset`. In the `train` function, the environment is reset once before entering the main training loop. This loop consists of three primary stages: 
+The `ContinuousA2CBase` class is responsible for the core logic of agent training, specifically in the methods `train`, `train_epoch`, and `prepare_dataset`. In the `train` function, the environment is reset once before entering the main training loop. This loop consists of three primary stages:
 
 1. Calling `update_epoch`.
 2. Running `train_epoch`.
@@ -64,7 +64,9 @@ The `update_epoch` function, which increments the epoch count, is implemented in
 2. `prepare_dataset` modifies the tensors in `batch_dict`, which may include normalizing values and advantages, depending on the configuration.
 3. Multiple mini-epochs are executed. In each mini-epoch, the dataset is divided into mini-batches, which are sequentially fed into `train_actor_critic`. Function `train_actor_critic`, implemented in `A2CAgent`, internally calls `calc_grad`, also found in `A2CAgent`.
 
-The `A2CAgent` class, which inherits from `ContinuousA2CBase`, handles the crucial task of gradient calculation and model parameter optimization in its `calc_grad` function. Specifically, `calc_grad` first performs a forward pass of the policy model with PyTorch’s gradients and computational graph enabled. It then calculates the individual loss terms as well as the total scalar loss, runs the backward pass to compute gradients, truncates gradients if necessary, updates model parameters via the optimizer, and finally logs the relevant training metrics such as loss terms and learning rates.
+The `A2CAgent` class, which inherits from `ContinuousA2CBase`, handles the crucial task of gradient calculation and model parameter optimization in its `calc_grad` function.
+
+Specifically, `calc_grad` first performs a forward pass of the policy model with PyTorch’s gradients and computational graph enabled. It then calculates the individual loss terms as well as the total scalar loss, runs the backward pass to compute gradients, truncates gradients if necessary, updates model parameters via the optimizer, and finally logs the relevant training metrics such as loss terms and learning rates.
 
 With an understanding of the default functions, it becomes straightforward to customize agents by inheriting from `A2CAgent` and overriding specific methods to suit particular needs. A good example of this is the implementation of the AMP algorithm in `IsaacGymEnvs`, where the `AMPAgent` class is created and registered in `train.py`, as shown below.
 
